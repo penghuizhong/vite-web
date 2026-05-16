@@ -39,33 +39,39 @@ export function useChat() {
         stream_tokens: true,
       }
 
-      await startStream({
-        url: '/v1/agent/stream',
-        method: 'POST',
-        body: request,
-        onChunk: (chunk) => {
-          const active = getActiveConversation()
-          if (active) {
-            const msg = active.messages.find((m) => m.id === assistantMessageId)
-            if (msg) {
-              updateMessage(convId, assistantMessageId, msg.content + chunk)
+      let accumulatedContent = ''
+
+      try {
+        await startStream({
+          url: '/v1/agent/stream',
+          method: 'POST',
+          body: request,
+          onChunk: (chunk) => {
+            accumulatedContent += chunk
+            updateMessage(convId, assistantMessageId, accumulatedContent)
+          },
+          onDone: () => {
+            setMessageStreaming(convId, assistantMessageId, false)
+          },
+          onError: (err) => {
+            setMessageStreaming(convId, assistantMessageId, false)
+            if (!accumulatedContent) {
+              updateMessage(convId, assistantMessageId, `请求失败: ${err.message}`)
             }
-          }
-        },
-        onDone: () => {
-          setMessageStreaming(convId, assistantMessageId, false)
-        },
-        onError: () => {
-          setMessageStreaming(convId, assistantMessageId, false)
-        },
-      })
+          },
+        })
+      } catch {
+        setMessageStreaming(convId, assistantMessageId, false)
+        if (!accumulatedContent) {
+          updateMessage(convId, assistantMessageId, '请求失败，请稍后重试')
+        }
+      }
     },
     [
       activeConversationId,
       createConversation,
       addMessage,
       startStream,
-      getActiveConversation,
       updateMessage,
       setMessageStreaming,
     ]

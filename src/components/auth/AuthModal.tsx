@@ -25,6 +25,16 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       return
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('请输入有效的邮箱地址')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('密码至少需要8个字符')
+      return
+    }
+
     if (mode === 'register' && !nickname) {
       setError('请填写昵称')
       return
@@ -161,7 +171,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   border: '1px solid var(--border-default)',
                   color: 'var(--text-primary)',
                 }}
-                placeholder="请输入密码"
+                placeholder="请输入密码（至少8位）"
               />
             </div>
           </div>

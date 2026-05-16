@@ -4,7 +4,7 @@ import { ChatInput } from './ChatInput'
 import { useChat } from '@/hooks/useChat'
 
 export function ChatWindow() {
-  const { sendMessage, stopStream, isStreaming, getActiveConversation } = useChat()
+  const { sendMessage, stopStream, isStreaming, getActiveConversation, error } = useChat()
 
   const active = getActiveConversation()
   const messages = active?.messages ?? []
@@ -23,6 +23,11 @@ export function ChatWindow() {
         <WelcomeScreen onPromptClick={handlePromptClick} />
       ) : (
         <MessageList messages={messages} />
+      )}
+      {error && (
+        <div className="text-center text-sm py-1" style={{ color: 'var(--error-text, #ef4444)' }}>
+          {error.message}
+        </div>
       )}
       <ChatInput onSend={handleSend} onStop={stopStream} isStreaming={isStreaming} />
     </div>
