@@ -44,6 +44,7 @@ export function PanelHeader({ hasMessages, onClear, onClose }: PanelHeaderProps)
               e.currentTarget.style.color = 'var(--text-muted)'
             }}
             title="清空记录"
+            aria-label="清空聊天记录"
           >
             <Trash2 size={16} />
           </button>
@@ -61,6 +62,7 @@ export function PanelHeader({ hasMessages, onClear, onClose }: PanelHeaderProps)
             e.currentTarget.style.background = 'transparent'
           }}
           title="收起面板"
+          aria-label="收起面板"
         >
           <ChevronDown size={18} />
         </button>
