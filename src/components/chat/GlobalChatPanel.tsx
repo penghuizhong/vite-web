@@ -4,6 +4,7 @@ import { ChatFloatPanel } from './ChatFloatPanel'
 import { PanelHeader } from './PanelHeader'
 import { ChatInput } from './ChatInput'
 import { MessageItem } from './MessageItem'
+import { WelcomeScreen } from './WelcomeScreen'
 import { useChatStore } from '@/stores/chatStore'
 import { useUiStore } from '@/stores/uiStore'
 import { useChat } from '@/hooks/useChat'
@@ -11,7 +12,7 @@ import { useChat } from '@/hooks/useChat'
 export function GlobalChatPanel() {
   const { chatPanelOpen, setChatPanelOpen } = useUiStore()
   const { conversations, activeConversationId, deleteConversation } = useChatStore()
-  const { sendMessage, stopStream, isStreaming } = useChat()
+  const { sendMessage, stopStream, isStreaming, error } = useChat()
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -19,10 +20,14 @@ export function GlobalChatPanel() {
   const activeConv = conversations.find((c) => c.id === activeConversationId)
   const messages = useMemo(() => activeConv?.messages ?? [], [activeConv?.messages])
   const hasMessages = messages.length > 0
+  const prevMsgLength = useRef(messages.length)
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom when new messages are added
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > prevMsgLength.current) {
+      scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevMsgLength.current = messages.length
   }, [messages])
 
   const handleSend = (content: string) => {
@@ -59,28 +64,7 @@ export function GlobalChatPanel() {
 
         {/* Message area */}
         <div className="flex-1 p-4 md:p-5 overflow-y-auto" style={{ background: 'transparent' }}>
-          {!hasMessages && !isStreaming && (
-            <div className="h-full flex flex-col items-center justify-center text-center p-6">
-              <div
-                className="w-14 h-14 rounded-3xl flex items-center justify-center mb-4"
-                style={{
-                  background: 'color-mix(in oklch, var(--bg-secondary) 50%, transparent)',
-                  border: '1px solid color-mix(in oklch, var(--border-default) 50%, transparent)',
-                }}
-              >
-                <span className="text-2xl">✂️</span>
-              </div>
-              <p className="font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                随身制版顾问
-              </p>
-              <p
-                className="text-sm leading-relaxed max-w-[200px]"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                有任何版型问题随时问我
-              </p>
-            </div>
-          )}
+          {!hasMessages && !isStreaming && <WelcomeScreen onPromptClick={handleSend} />}
 
           <div className="flex flex-col gap-5">
             {messages.map((msg) => (
@@ -91,6 +75,11 @@ export function GlobalChatPanel() {
         </div>
 
         {/* Input area */}
+        {error && (
+          <div className="text-center text-sm p-3" style={{ color: 'var(--error-text, #ef4444)' }}>
+            {error.message}
+          </div>
+        )}
         <div
           className="p-3 shrink-0"
           style={{
