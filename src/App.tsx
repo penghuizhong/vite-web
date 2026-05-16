@@ -1,7 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { ChatPage } from '@/pages/ChatPage'
 import { CalculatorPage } from '@/pages/CalculatorPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -20,7 +19,7 @@ export default function App() {
       <BrowserRouter>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<ChatPage />} />
+            <Route path="/" element={<Navigate to="/calculator" replace />} />
             <Route path="/calculator" element={<CalculatorPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
