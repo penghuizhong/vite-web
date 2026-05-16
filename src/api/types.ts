@@ -31,3 +31,34 @@ export interface CalculatorResponse {
   total_ease: string
   size_code: string
 }
+
+export interface TokenResponse {
+  access_token: string
+  refresh_token: string
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+  nickname: string
+}
+
+export interface UserResponse {
+  id: string
+  email: string
+  nickname: string
+  is_active: boolean
+}
+
+export interface StreamRequest {
+  message: string
+  thread_id: string | null
+  stream_tokens?: boolean
+  agent_id?: string
+  model?: string
+}
