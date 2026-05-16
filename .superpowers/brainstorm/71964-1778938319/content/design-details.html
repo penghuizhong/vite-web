@@ -1,0 +1,83 @@
+<h2>方案 A 设计详情 - 架构与组件</h2>
+<p class="subtitle">全局浮动聊天面板的组件结构和数据流</p>
+
+<div class="section">
+  <h3>组件架构</h3>
+  
+  <div class="mockup">
+    <div class="mockup-header">AppLayout 层级结构</div>
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; background: #1a1a1a; color: #e5e5e5; padding: 20px; border-radius: 8px;">
+      <div style="color: #8b5cf6;">AppLayout</div>
+      <div style="padding-left: 20px; color: #a78bfa;">├── Sidebar</div>
+      <div style="padding-left: 20px; color: #a78bfa;">│   └── 会话列表 (已有)</div>
+      <div style="padding-left: 20px; color: #a78bfa;">├── Header</div>
+      <div style="padding-left: 20px; color: #a78bfa;">├── main → children (路由页面)</div>
+      <div style="padding-left: 20px; color: #10b981; font-weight: bold;">└── GlobalChatPanel ← 新增</div>
+      <div style="padding-left: 40px; color: #10b981;">├── ChatBubble (浮动气泡按钮)</div>
+      <div style="padding-left: 40px; color: #10b981;">├── ChatFloatPanel (浮动面板)</div>
+      <div style="padding-left: 60px; color: #10b981;">├── PanelHeader (头部)</div>
+      <div style="padding-left: 60px; color: #10b981;">├── MessageList (消息列表)</div>
+      <div style="padding-left: 60px; color: #10b981;">└── ChatInput (输入框)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>uiStore 新增状态</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.8; background: #f7f7f8; padding: 16px; border-radius: 8px;">
+      <span style="color: #8b5cf6;">chatPanelOpen</span>: boolean — 面板是否展开<br>
+      <span style="color: #8b5cf6;">setChatPanelOpen(open)</span> — 设置面板开关<br>
+      <span style="color: #8b5cf6;">toggleChatPanel()</span> — 切换面板状态<br>
+      <br>
+      <span style="color: #6b6b6b;">// 侧边栏点击会话时的联动逻辑：</span><br>
+      <span style="color: #6b6b6b;">// 1. setActiveConversation(id)</span><br>
+      <span style="color: #6b6b6b;">// 2. setChatPanelOpen(true) → 自动展开面板</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>桌面端面板尺寸</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="background: #f5f5f5; padding: 16px; border-radius: 8px;">
+      <div style="position: relative; width: 500px; height: 812px; background: white; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; margin: 0 auto;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center; background: rgba(247,247,248,0.5);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></div>
+            <span style="font-size: 14px; font-weight: 600;">服装制版 AI</span>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <div style="width: 32px; height: 32px; background: #f5f5f5; border-radius: 50%;"></div>
+            <div style="width: 32px; height: 32px; background: #f5f5f5; border-radius: 50%;"></div>
+          </div>
+        </div>
+        <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 640px; overflow: hidden;">
+          <div style="align-self: flex-end; background: #0f0f0f; color: white; padding: 10px 14px; border-radius: 16px 16px 4px 16px; max-width: 80%; font-size: 13px;">这个袖窿怎么做？</div>
+          <div style="align-self: flex-start; background: rgba(247,247,248,0.5); border: 1px solid #e5e5e5; padding: 10px 14px; border-radius: 16px 16px 16px 4px; max-width: 80%; font-size: 13px;">袖窿深度计算公式：B/6 + 7cm...</div>
+        </div>
+        <div style="padding: 12px; border-top: 1px solid #e5e5e5;">
+          <div style="display: flex; align-items: center; background: white; border: 1px solid #e5e5e5; border-radius: 32px; padding: 8px 12px;">
+            <div style="width: 36px; height: 36px; background: #f5f5f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">+</div>
+            <div style="flex: 1; margin: 0 8px; color: #9ca3af; font-size: 14px;">有问题，尽管问</div>
+            <div style="width: 44px; height: 44px; background: #8b5cf6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">↑</div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align: center; margin-top: 8px; font-size: 12px; color: #6b6b6b;">500px × 812px (比原 400×650 增加约 1/4)</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据流</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="background: #f7f7f8; padding: 16px; border-radius: 8px; font-size: 13px; line-height: 2;">
+      <strong>用户操作 → 状态变化 → UI 响应</strong><br><br>
+      1. 点击气泡按钮 → <code>setChatPanelOpen(true)</code> → 面板展开<br>
+      2. 发送消息 → <code>chatStore.sendMessage()</code> → 创建会话 → 侧边栏自动新增<br>
+      3. 侧边栏点击会话 → <code>setActiveConversation(id)</code> + <code>setChatPanelOpen(true)</code> → 面板展开对应聊天<br>
+      4. 点击关闭按钮 → <code>setChatPanelOpen(false)</code> → 面板收起为气泡
+    </div>
+  </div>
+</div>
