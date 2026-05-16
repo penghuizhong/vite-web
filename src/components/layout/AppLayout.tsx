@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { GlobalChatPanel } from '@/components/chat/GlobalChatPanel'
 import { useAuthStore } from '@/stores/authStore'
 import { useUiStore } from '@/stores/uiStore'
 
@@ -25,6 +26,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-hidden">{children}</main>
       </div>
       <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <GlobalChatPanel />
     </div>
   )
 }
