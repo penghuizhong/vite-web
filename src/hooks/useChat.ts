@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { useStreamSSE } from '@/hooks/useStreamSSE'
 import { useChatStore } from '@/stores/chatStore'
-import { API_BASE_URL } from '@/lib/constants'
 import type { ChatRequest } from '@/types/chat'
 
 export function useChat() {
@@ -36,11 +35,12 @@ export function useChat() {
 
       const request: ChatRequest = {
         message: content,
-        conversation_id: convId,
+        thread_id: convId,
+        stream_tokens: true,
       }
 
       await startStream({
-        url: `${API_BASE_URL}/api/v1/agent/chat`,
+        url: '/v1/agent/stream',
         method: 'POST',
         body: request,
         onChunk: (chunk) => {

@@ -18,8 +18,8 @@ export interface Conversation {
 
 export interface ChatRequest {
   message: string
-  conversation_id: string | null
-  context?: Record<string, unknown>
+  thread_id: string | null
+  stream_tokens?: boolean
 }
 
 export interface SSEChunk {
