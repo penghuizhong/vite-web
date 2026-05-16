@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { getToken } from '@/lib/auth'
 
 interface StreamOptions {
   url: string
@@ -26,6 +27,7 @@ export function useStreamSSE() {
 
   const startStream = useCallback(async (options: StreamOptions) => {
     const { url, method = 'POST', body, headers = {}, onChunk, onDone, onError } = options
+    const token = getToken()
 
     abortControllerRef.current?.abort()
     const controller = new AbortController()
@@ -40,6 +42,7 @@ export function useStreamSSE() {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'text/event-stream',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,
@@ -70,8 +73,11 @@ export function useStreamSSE() {
             if (data === '[DONE]') continue
 
             try {
-              const parsed = JSON.parse(data) as { content?: string; text?: string }
-              const chunk = parsed.content ?? parsed.text ?? data
+              const parsed = JSON.parse(data) as { type?: string; content?: string; text?: string }
+              const chunk =
+                parsed.type === 'token'
+                  ? (parsed.content ?? '')
+                  : (parsed.content ?? parsed.text ?? data)
               accumulated += chunk
               onChunk?.(chunk)
             } catch {
