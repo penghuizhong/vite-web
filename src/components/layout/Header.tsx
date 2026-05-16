@@ -44,7 +44,7 @@ export function Header() {
         </div>
 
         <nav className="flex items-center gap-1">
-          <Link
+          {/* <Link
             to="/"
             className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             style={{
@@ -56,7 +56,7 @@ export function Header() {
               <MessageSquare size={14} />
               AI 助手
             </span>
-          </Link>
+          </Link> */}
           <Link
             to="/calculator"
             className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
