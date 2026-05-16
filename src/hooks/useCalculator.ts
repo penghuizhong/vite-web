@@ -1,13 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
 import axios from 'axios'
-import { API_BASE_URL } from '@/lib/constants'
 import type { CalculatorRequest, CalculatorResponse } from '@/types/calculator'
 
 async function calculatePattern(data: CalculatorRequest): Promise<CalculatorResponse> {
-  const response = await axios.post<CalculatorResponse>(
-    `${API_BASE_URL}/api/v1/calculator/pattern`,
-    data
-  )
+  const response = await axios.post<CalculatorResponse>('/api/v1/calculator/pattern', data)
   return response.data
 }
 
