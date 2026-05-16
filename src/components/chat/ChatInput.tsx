@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArrowUp, Plus, Mic, Square } from 'lucide-react'
+import { ArrowUp, Plus, Mic, Square, Paperclip, Palette } from 'lucide-react'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -71,16 +71,10 @@ export function ChatInput({
           <div className="flex flex-col">
             <button
               type="button"
-              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left group"
-              style={{ background: 'transparent' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-tertiary)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left group hover:bg-[var(--bg-tertiary)]"
+              onClick={() => setShowMenu(false)}
             >
-              <span className="text-lg">📎</span>
+              <Paperclip className="h-5 w-5" />
               <span className="text-[15px] font-medium" style={{ color: 'var(--text-primary)' }}>
                 添加照片和文件
               </span>
@@ -90,16 +84,10 @@ export function ChatInput({
 
             <button
               type="button"
-              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left group"
-              style={{ background: 'transparent' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-tertiary)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left group hover:bg-[var(--bg-tertiary)]"
+              onClick={() => setShowMenu(false)}
             >
-              <span className="text-lg">🎨</span>
+              <Palette className="h-5 w-5" />
               <span className="text-[15px] font-medium" style={{ color: 'var(--text-primary)' }}>
                 创建图片
               </span>
@@ -123,6 +111,8 @@ export function ChatInput({
           type="button"
           ref={plusBtnRef}
           onClick={() => setShowMenu(!showMenu)}
+          aria-label={showMenu ? '关闭菜单' : '添加附件'}
+          aria-expanded={showMenu}
           className="p-3 transition-colors rounded-full"
           style={{
             color: showMenu ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -149,6 +139,7 @@ export function ChatInput({
 
         <button
           type="button"
+          aria-label="语音输入"
           className="p-3 transition-colors rounded-full disabled:opacity-50"
           style={{ color: 'var(--text-muted)' }}
           disabled={isStreaming}
@@ -160,9 +151,10 @@ export function ChatInput({
           <button
             type="button"
             onClick={onStop}
+            aria-label="停止生成"
             className="ml-1 h-11 w-11 min-w-[44px] rounded-full flex items-center justify-center transition-all duration-300 shadow-md"
             style={{
-              background: '#ef4444',
+              background: 'var(--error-text, #ef4444)',
               color: '#ffffff',
             }}
           >
@@ -171,6 +163,7 @@ export function ChatInput({
         ) : (
           <button
             type="submit"
+            aria-label="发送消息"
             disabled={!hasContent || disabled}
             className="ml-1 h-11 w-11 min-w-[44px] rounded-full flex items-center justify-center transition-all duration-300"
             style={{
@@ -184,6 +177,10 @@ export function ChatInput({
           </button>
         )}
       </form>
+
+      <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
+        AI 生成的内容仅供参考，请以实际制版经验为准
+      </p>
     </div>
   )
 }
