@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
+import rehypeSanitize from 'rehype-sanitize'
 import { useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import 'highlight.js/styles/github.css'
@@ -68,7 +69,7 @@ export function MarkdownRenderer({ content, isStreaming = false }: MarkdownRende
     <div className={`markdown-body ${isStreaming ? 'streaming-cursor' : ''}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]}
+        rehypePlugins={[rehypeSanitize, rehypeHighlight]}
         components={{
           code: CodeBlock as React.ComponentType<React.HTMLAttributes<HTMLElement>>,
         }}

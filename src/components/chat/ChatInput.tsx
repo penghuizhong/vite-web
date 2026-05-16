@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArrowUp, Plus, Mic, Square, Paperclip, Palette } from 'lucide-react'
+import { ArrowUp, Plus, Square, Paperclip, Palette } from 'lucide-react'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -137,7 +137,8 @@ export function ChatInput({
           disabled={disabled || isStreaming}
         />
 
-        <button
+        {/* TODO: Implement voice input */}
+        {/* <button
           type="button"
           aria-label="语音输入"
           className="p-3 transition-colors rounded-full disabled:opacity-50"
@@ -145,7 +146,7 @@ export function ChatInput({
           disabled={isStreaming}
         >
           <Mic className="h-[22px] w-[22px] stroke-[1.5]" />
-        </button>
+        </button> */}
 
         {isStreaming ? (
           <button

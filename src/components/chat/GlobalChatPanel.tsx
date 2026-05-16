@@ -11,7 +11,9 @@ import { useChat } from '@/hooks/useChat'
 
 export function GlobalChatPanel() {
   const { chatPanelOpen, setChatPanelOpen } = useUiStore()
-  const { conversations, activeConversationId, deleteConversation } = useChatStore()
+  const conversations = useChatStore((s) => s.conversations)
+  const activeConversationId = useChatStore((s) => s.activeConversationId)
+  const deleteConversation = useChatStore((s) => s.deleteConversation)
   const { sendMessage, stopStream, isStreaming, error } = useChat()
 
   const scrollRef = useRef<HTMLDivElement>(null)
