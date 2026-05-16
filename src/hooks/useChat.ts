@@ -1,0 +1,86 @@
+import { useCallback } from 'react'
+import { useStreamSSE } from '@/hooks/useStreamSSE'
+import { useChatStore } from '@/stores/chatStore'
+import { API_BASE_URL } from '@/lib/constants'
+import type { ChatRequest } from '@/types/chat'
+
+export function useChat() {
+  const {
+    conversations,
+    activeConversationId,
+    createConversation,
+    setActiveConversation,
+    deleteConversation,
+    addMessage,
+    updateMessage,
+    setMessageStreaming,
+    getActiveConversation,
+  } = useChatStore()
+
+  const { isStreaming, error, startStream, stopStream } = useStreamSSE()
+
+  const sendMessage = useCallback(
+    async (content: string) => {
+      let convId = activeConversationId
+      if (!convId) {
+        convId = createConversation()
+      }
+
+      addMessage(convId, { role: 'user', content })
+
+      const assistantMessageId = addMessage(convId, {
+        role: 'assistant',
+        content: '',
+        isStreaming: true,
+      })
+
+      const request: ChatRequest = {
+        message: content,
+        conversation_id: convId,
+      }
+
+      await startStream({
+        url: `${API_BASE_URL}/api/v1/agent/chat`,
+        method: 'POST',
+        body: request,
+        onChunk: (chunk) => {
+          const active = getActiveConversation()
+          if (active) {
+            const msg = active.messages.find((m) => m.id === assistantMessageId)
+            if (msg) {
+              updateMessage(convId, assistantMessageId, msg.content + chunk)
+            }
+          }
+        },
+        onDone: () => {
+          setMessageStreaming(convId, assistantMessageId, false)
+        },
+        onError: () => {
+          setMessageStreaming(convId, assistantMessageId, false)
+        },
+      })
+    },
+    [
+      activeConversationId,
+      createConversation,
+      addMessage,
+      startStream,
+      getActiveConversation,
+      updateMessage,
+      setMessageStreaming,
+    ]
+  )
+
+  return {
+    conversations,
+    activeConversationId,
+    isStreaming,
+    error,
+    createConversation,
+    setActiveConversation,
+    deleteConversation,
+    sendMessage,
+    stopStream,
+    getActiveConversation,
+  }
+}
