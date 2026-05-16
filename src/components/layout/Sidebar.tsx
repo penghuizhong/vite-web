@@ -12,7 +12,7 @@ export function Sidebar() {
     deleteConversation,
   } = useChatStore()
 
-  const { sidebarOpen, setSidebarOpen } = useUiStore()
+  const { sidebarOpen, setSidebarOpen, setChatPanelOpen } = useUiStore()
 
   return (
     <>
@@ -40,6 +40,7 @@ export function Sidebar() {
               onClick={() => {
                 createConversation()
                 setSidebarOpen(false)
+                setChatPanelOpen(true)
               }}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
               style={{
@@ -71,6 +72,7 @@ export function Sidebar() {
                   }}
                   onClick={() => {
                     setActiveConversation(conv.id)
+                    setChatPanelOpen(true)
                     setSidebarOpen(false)
                   }}
                 >
