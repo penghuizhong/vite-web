@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/lib/constants'
+import { getToken } from '@/lib/auth'
 
 interface StreamOptions {
   body: unknown
@@ -10,13 +10,15 @@ interface StreamOptions {
 
 export async function streamSSE(options: StreamOptions): Promise<void> {
   const { body, onChunk, onDone, onError, signal } = options
+  const token = getToken()
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/agent/chat`, {
+    const response = await fetch('/v1/agent/stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(body),
       signal,
@@ -46,9 +48,14 @@ export async function streamSSE(options: StreamOptions): Promise<void> {
           if (data === '[DONE]') continue
 
           try {
-            const parsed = JSON.parse(data) as { content?: string; text?: string }
-            const chunk = parsed.content ?? parsed.text ?? data
-            onChunk(chunk)
+            const parsed = JSON.parse(data) as { type?: string; content?: string; text?: string }
+            if (parsed.type === 'token') {
+              onChunk(parsed.content ?? '')
+            } else if (parsed.content ?? parsed.text) {
+              onChunk(parsed.content ?? parsed.text ?? '')
+            } else {
+              onChunk(data)
+            }
           } catch {
             onChunk(data)
           }
