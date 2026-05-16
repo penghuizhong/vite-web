@@ -1,6 +1,7 @@
 import { Plus, Trash2, MessageSquare } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import { useUiStore } from '@/stores/uiStore'
+import { UserSection } from '@/components/auth/UserSection'
 
 export function Sidebar() {
   const {
@@ -99,6 +100,8 @@ export function Sidebar() {
               ))
             )}
           </div>
+
+          <UserSection />
         </div>
       </aside>
     </>
