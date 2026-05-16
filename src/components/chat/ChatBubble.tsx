@@ -8,6 +8,7 @@ interface ChatBubbleProps {
 export function ChatBubble({ onClick, hidden }: ChatBubbleProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`chat-bubble-btn p-3.5 rounded-full shadow-2xl group ${
         hidden ? 'hidden-bubble' : ''
@@ -21,11 +22,7 @@ export function ChatBubble({ onClick, hidden }: ChatBubbleProps) {
       }}
       aria-label="唤醒 AI 助手"
     >
-      <MessageCircle
-        size={26}
-        className="transition-colors duration-300"
-        style={{ color: 'var(--text-primary)' }}
-      />
+      <MessageCircle size={26} className="transition-colors duration-300" />
     </button>
   )
 }
