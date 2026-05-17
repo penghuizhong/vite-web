@@ -2,7 +2,12 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getToken, getRefreshToken, setTokens, removeTokens } from '@/lib/auth'
 import type { TokenResponse } from '@/api/types'
 
+// 💡 核心修改 1：动态获取基础 URL。
+// 如果是本地开发没配环境变量，就退化成空字符串 ''，继续走本地 Vite Proxy（完全和以前一样！）
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
 export const client = axios.create({
+  baseURL: API_BASE_URL, // 👈 注入基础路径
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -31,9 +36,13 @@ const refreshAccessToken = async (): Promise<string> => {
   const refreshToken = getRefreshToken()
   if (!refreshToken) throw new Error('No refresh token')
 
-  const { data } = await axios.post<TokenResponse>('/api/v1/auth/refresh', {
-    refresh_token: refreshToken,
-  })
+  // 💡 核心修改 2：修复原生 axios.post 不携带 baseURL 的暗坑
+  const { data } = await axios.post<TokenResponse>(
+    '/api/v1/auth/refresh',
+    { refresh_token: refreshToken },
+    { baseURL: API_BASE_URL } // 👈 必须在这里也注入，否则云端刷新 token 会报 404
+  )
+
   setTokens(data.access_token, data.refresh_token)
   return data.access_token
 }
