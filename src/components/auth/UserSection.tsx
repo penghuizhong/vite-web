@@ -51,8 +51,9 @@ export function UserSection() {
           <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
             {user.nickname}
           </p>
+          {/* 💡 修正点：将 user.email 改为 user.username */}
           <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-            {user.email}
+            {user.username}
           </p>
         </div>
         <button

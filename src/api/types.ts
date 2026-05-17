@@ -38,19 +38,19 @@ export interface TokenResponse {
 }
 
 export interface LoginRequest {
-  email: string
+  username: string
   password: string
 }
 
 export interface RegisterRequest {
-  email: string
+  username: string
   password: string
   nickname: string
 }
 
 export interface UserResponse {
   id: string
-  email: string
+  username: string
   nickname: string
   is_active: boolean
 }

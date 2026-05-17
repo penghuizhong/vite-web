@@ -7,8 +7,8 @@ interface AuthStore {
   user: UserResponse | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, nickname: string) => Promise<void>
+  login: (username: string, password: string) => Promise<void>
+  register: (username: string, password: string, nickname: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
 }
@@ -18,10 +18,10 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   isLoading: false,
   isAuthenticated: isAuthenticated(),
 
-  login: async (email: string, password: string) => {
+  login: async (username: string, password: string) => {
     set({ isLoading: true })
     try {
-      const res = await apiLogin({ email, password })
+      const res = await apiLogin({ username, password })
       setTokens(res.access_token, res.refresh_token)
       set({ isAuthenticated: true })
       await set({ isLoading: false })
@@ -34,10 +34,10 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     }
   },
 
-  register: async (email: string, password: string, nickname: string) => {
+  register: async (username: string, password: string, nickname: string) => {
     set({ isLoading: true })
     try {
-      const res = await apiRegister({ email, password, nickname })
+      const res = await apiRegister({ username, password, nickname })
       setTokens(res.access_token, res.refresh_token)
       set({ isAuthenticated: true })
       await set({ isLoading: false })

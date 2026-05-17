@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Mail, Lock, User } from 'lucide-react'
+import { X, Lock, User } from 'lucide-react' // 💡 移除了 Mail，保留 User 作为通用图标
 import { useAuthStore } from '@/stores/authStore'
 
 interface AuthModalProps {
@@ -9,7 +9,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
@@ -20,18 +20,19 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
     e.preventDefault()
     setError('')
 
-    if (!email || !password) {
+    if (!username || !password) {
       setError('请填写所有必填字段')
       return
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('请输入有效的邮箱地址')
+    if (username.length < 3) {
+      setError('用户名至少需要3个字符')
       return
     }
 
-    if (password.length < 8) {
-      setError('密码至少需要8个字符')
+    // 💡 修正点 1：将长度拦截阈值由 8 改为 6，与后端的最低限制以及 placeholder 保持完全一致
+    if (password.length < 6) {
+      setError('密码至少需要6个字符')
       return
     }
 
@@ -42,19 +43,20 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
     try {
       if (mode === 'login') {
-        await login(email, password)
+        await login(username, password)
       } else {
-        await register(email, password, nickname)
+        await register(username, password, nickname)
       }
       onClose()
       resetForm()
     } catch {
-      setError(mode === 'login' ? '登录失败，请检查邮箱和密码' : '注册失败，请稍后重试')
+      // 💡 修正点 2：将兜底报错提示中的“邮箱”彻底修正为“用户名”
+      setError(mode === 'login' ? '登录失败，请检查用户名和密码' : '注册失败，请稍后重试')
     }
   }
 
   const resetForm = () => {
-    setEmail('')
+    setUsername('')
     setPassword('')
     setNickname('')
     setError('')
@@ -125,25 +127,26 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               className="block text-sm font-medium mb-1.5"
               style={{ color: 'var(--text-secondary)' }}
             >
-              邮箱
+              用户名
             </label>
             <div className="relative">
-              <Mail
+              {/* 💡 修正点 3：将原先的信封图标 Mail 替换为 User 图标，更契合“用户名”语义 */}
+              <User
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2"
                 style={{ color: 'var(--text-muted)' }}
               />
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-colors"
                 style={{
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-default)',
                   color: 'var(--text-primary)',
                 }}
-                placeholder="请输入邮箱"
+                placeholder="请输入用户名"
               />
             </div>
           </div>
@@ -171,7 +174,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
                   border: '1px solid var(--border-default)',
                   color: 'var(--text-primary)',
                 }}
-                placeholder="请输入密码（至少8位）"
+                placeholder="请输入密码（至少6位）"
               />
             </div>
           </div>
