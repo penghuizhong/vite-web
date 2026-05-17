@@ -39,30 +39,44 @@ export function useChat() {
         stream_tokens: true,
       }
 
-      let accumulatedContent = ''
+      let accumulatedTokens = ''
 
       try {
         await startStream({
           url: '/v1/agent/stream',
           method: 'POST',
           body: request,
-          onChunk: (chunk) => {
-            accumulatedContent += chunk
-            updateMessage(convId, assistantMessageId, accumulatedContent)
+
+          // type: 'token' — 流式片段，实时拼接展示打字效果
+          onToken: (token) => {
+            accumulatedTokens += token
+            updateMessage(convId, assistantMessageId, accumulatedTokens)
           },
+
+          // type: 'message' — 完整消息对象，用其 content 字段替换最终内容
+          // 服务端在流结束前会发一条完整的 ChatMessage，内容比 token 流更准确
+          onMessage: (message) => {
+            const finalContent = typeof message.content === 'string' ? message.content : null
+            if (finalContent) {
+              accumulatedTokens = finalContent
+              updateMessage(convId, assistantMessageId, finalContent)
+            }
+          },
+
           onDone: () => {
             setMessageStreaming(convId, assistantMessageId, false)
           },
+
           onError: (err) => {
             setMessageStreaming(convId, assistantMessageId, false)
-            if (!accumulatedContent) {
+            if (!accumulatedTokens) {
               updateMessage(convId, assistantMessageId, `请求失败: ${err.message}`)
             }
           },
         })
       } catch {
         setMessageStreaming(convId, assistantMessageId, false)
-        if (!accumulatedContent) {
+        if (!accumulatedTokens) {
           updateMessage(convId, assistantMessageId, '请求失败，请稍后重试')
         }
       }

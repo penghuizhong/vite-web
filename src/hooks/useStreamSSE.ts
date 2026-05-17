@@ -1,12 +1,22 @@
 import { useCallback, useRef, useState } from 'react'
 import { getToken, getRefreshToken, setTokens } from '@/lib/auth'
 
+// 服务端 SSE 事件的两种格式：
+//   { type: 'token',   content: string }            → 流式 token 片段
+//   { type: 'message', content: ChatMessage(dict) } → 完整消息对象
+//   { type: 'error',   content: string }            → 错误文本
+export type SSETokenEvent = { type: 'token'; content: string }
+export type SSEMessageEvent = { type: 'message'; content: Record<string, unknown> }
+export type SSEErrorEvent = { type: 'error'; content: string }
+export type SSEEvent = SSETokenEvent | SSEMessageEvent | SSEErrorEvent
+
 interface StreamOptions {
   url: string
   method?: 'GET' | 'POST'
   body?: unknown
   headers?: Record<string, string>
-  onChunk?: (chunk: string) => void
+  onToken?: (token: string) => void // 流式 token 片段
+  onMessage?: (message: Record<string, unknown>) => void // 完整消息对象
   onDone?: (fullText: string) => void
   onError?: (error: Error) => void
 }
@@ -34,6 +44,30 @@ async function refreshAccessToken(): Promise<string> {
   return data.access_token
 }
 
+/** 解析单条 SSE data 行，返回结构化事件；解析失败返回 null */
+function parseSSEEvent(data: string): SSEEvent | null {
+  try {
+    const parsed = JSON.parse(data) as { type?: string; content?: unknown }
+    const { type, content } = parsed
+
+    if (type === 'token' && typeof content === 'string') {
+      return { type: 'token', content }
+    }
+    if (type === 'message' && content !== null && typeof content === 'object') {
+      return { type: 'message', content: content as Record<string, unknown> }
+    }
+    if (type === 'error' && typeof content === 'string') {
+      return { type: 'error', content }
+    }
+
+    console.warn('[useStreamSSE] 未识别的 SSE 事件，已跳过:', parsed)
+    return null
+  } catch {
+    // 非 JSON 裸文本，当 token 处理
+    return { type: 'token', content: data }
+  }
+}
+
 export function useStreamSSE() {
   const [state, setState] = useState<StreamState>({
     isStreaming: false,
@@ -43,7 +77,16 @@ export function useStreamSSE() {
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const startStream = useCallback(async (options: StreamOptions) => {
-    const { url, method = 'POST', body, headers = {}, onChunk, onDone, onError } = options
+    const {
+      url,
+      method = 'POST',
+      body,
+      headers = {},
+      onToken,
+      onMessage,
+      onDone,
+      onError,
+    } = options
 
     abortControllerRef.current?.abort()
     const controller = new AbortController()
@@ -52,92 +95,8 @@ export function useStreamSSE() {
     setState({ isStreaming: true, text: '', error: null })
     let accumulated = ''
 
-    let token = getToken()
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...headers,
-        },
-        body: body ? JSON.stringify(body) : undefined,
-        signal: controller.signal,
-      })
-
-      if (response.status === 401) {
-        token = await refreshAccessToken()
-        const retryResponse = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
-            Authorization: `Bearer ${token}`,
-            ...headers,
-          },
-          body: body ? JSON.stringify(body) : undefined,
-          signal: controller.signal,
-        })
-
-        if (!retryResponse.ok) {
-          throw new Error(`HTTP error: ${retryResponse.status} ${retryResponse.statusText}`)
-        }
-
-        if (!retryResponse.body) {
-          throw new Error('Response body is null')
-        }
-
-        const reader = retryResponse.body.getReader()
-        const decoder = new TextDecoder('utf-8')
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const rawChunk = decoder.decode(value, { stream: true })
-          const lines = rawChunk.split('\n')
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim()
-              if (data === '[DONE]') continue
-
-              try {
-                const parsed = JSON.parse(data) as {
-                  type?: string
-                  content?: string
-                  text?: string
-                }
-                const chunk =
-                  parsed.type === 'token'
-                    ? (parsed.content ?? '')
-                    : (parsed.content ?? parsed.text ?? data)
-                accumulated += chunk
-                onChunk?.(chunk)
-              } catch {
-                accumulated += data
-                onChunk?.(data)
-              }
-
-              setState((prev) => ({ ...prev, text: accumulated }))
-            }
-          }
-        }
-
-        setState((prev) => ({ ...prev, isStreaming: false }))
-        onDone?.(accumulated)
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status} ${response.statusText}`)
-      }
-
-      if (!response.body) {
-        throw new Error('Response body is null')
-      }
+    async function processStream(response: Response) {
+      if (!response.body) throw new Error('Response body is null')
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder('utf-8')
@@ -150,27 +109,61 @@ export function useStreamSSE() {
         const lines = rawChunk.split('\n')
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim()
-            if (data === '[DONE]') continue
+          if (!line.startsWith('data: ')) continue
 
-            try {
-              const parsed = JSON.parse(data) as { type?: string; content?: string; text?: string }
-              const chunk =
-                parsed.type === 'token'
-                  ? (parsed.content ?? '')
-                  : (parsed.content ?? parsed.text ?? data)
-              accumulated += chunk
-              onChunk?.(chunk)
-            } catch {
-              accumulated += data
-              onChunk?.(data)
-            }
+          const data = line.slice(6).trim()
+          if (!data || data === '[DONE]') continue
 
+          const event = parseSSEEvent(data)
+          if (!event) continue
+
+          if (event.type === 'token') {
+            // 流式 token：累积并实时更新 UI
+            accumulated += event.content
+            onToken?.(event.content)
             setState((prev) => ({ ...prev, text: accumulated }))
+          } else if (event.type === 'message') {
+            // 完整消息：交给调用方处理（替换最终内容）
+            onMessage?.(event.content)
+          } else if (event.type === 'error') {
+            throw new Error(event.content)
           }
         }
       }
+    }
+
+    let token = getToken()
+
+    const makeHeaders = (t: string | null): Record<string, string> => ({
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      ...(t ? { Authorization: `Bearer ${t}` } : {}),
+      ...headers,
+    })
+
+    try {
+      let response = await fetch(url, {
+        method,
+        headers: makeHeaders(token),
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      })
+
+      if (response.status === 401) {
+        token = await refreshAccessToken()
+        response = await fetch(url, {
+          method,
+          headers: makeHeaders(token),
+          body: body ? JSON.stringify(body) : undefined,
+          signal: controller.signal,
+        })
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`)
+      }
+
+      await processStream(response)
 
       setState((prev) => ({ ...prev, isStreaming: false }))
       onDone?.(accumulated)
