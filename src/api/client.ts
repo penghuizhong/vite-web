@@ -2,9 +2,15 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getToken, getRefreshToken, setTokens, removeTokens } from '@/lib/auth'
 import type { TokenResponse } from '@/api/types'
 
-// 💡 核心修改 1：动态获取基础 URL。
-// 如果是本地开发没配环境变量，就退化成空字符串 ''，继续走本地 Vite Proxy（完全和以前一样！）
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+// 1. 如果变量里不幸带了双引号，强行把双引号剥离掉
+API_BASE_URL = API_BASE_URL.replace(/"/g, '').replace(/'/g, '')
+
+// 2. 如果本地或线上死活没读取到，直接用您最正确的线上域名做最终兜底！
+if (!API_BASE_URL || API_BASE_URL === '') {
+  API_BASE_URL = 'https://api.fyzj.online'
+}
 
 export const client = axios.create({
   baseURL: API_BASE_URL, // 👈 注入基础路径随意支配
