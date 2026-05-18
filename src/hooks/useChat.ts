@@ -23,7 +23,7 @@ export function useChat() {
     async (content: string) => {
       let convId = activeConversationId
       if (!convId) {
-        convId = createConversation()
+        convId = await createConversation()
       }
 
       addMessage(convId, { role: 'user', content })

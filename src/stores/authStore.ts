@@ -24,11 +24,10 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     try {
       const res = await apiLogin({ username, password })
       setTokens(res.access_token, res.refresh_token)
-      set({ isAuthenticated: true })
-      await set({ isLoading: false })
-      // Fetch user info after login
+      set({ isAuthenticated: true, isLoading: false })
       const user = await getMe()
       set({ user })
+      await useChatStore.getState().fetchConversations()
     } catch {
       set({ isLoading: false })
       throw new Error('登录失败')
@@ -40,11 +39,10 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     try {
       const res = await apiRegister({ username, password, nickname })
       setTokens(res.access_token, res.refresh_token)
-      set({ isAuthenticated: true })
-      await set({ isLoading: false })
-      // Fetch user info after register
+      set({ isAuthenticated: true, isLoading: false })
       const user = await getMe()
       set({ user })
+      await useChatStore.getState().fetchConversations()
     } catch {
       set({ isLoading: false })
       throw new Error('注册失败')
@@ -54,12 +52,8 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   logout: () => {
     removeTokens()
     set({ user: null, isAuthenticated: false })
-
-    // 2. 🚨 核心斩草除根：清空聊天记录的内存
     useChatStore.getState().clearStore()
-
-    // 3. 🚨 核心斩草除根：暴力销毁 localStorage 里的硬盘缓存
-    localStorage.removeItem('patternmaking-chat-store')
+    window.location.href = '/'
   },
 
   fetchUser: async () => {
@@ -67,6 +61,7 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     try {
       const user = await getMe()
       set({ user })
+      await useChatStore.getState().fetchConversations()
     } catch {
       removeTokens()
       set({ user: null, isAuthenticated: false })
