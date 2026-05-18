@@ -98,12 +98,22 @@ export function useStreamSSE() {
       const reader = response.body.getReader()
       const decoder = new TextDecoder('utf-8')
 
+      // 🎯 核心修复：引入一个缓冲区，用来存放被网络截断的半截字符串
+      let buffer = ''
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
-        const rawChunk = decoder.decode(value, { stream: true })
-        const lines = rawChunk.split('\n')
+        // 1. 把新收到的网络数据，拼接到缓冲区后面
+        buffer += decoder.decode(value, { stream: true })
+
+        // 2. 按换行符切分缓冲区里的数据
+        const lines = buffer.split('\n')
+
+        // 🎯 核心修复：最后一行（lines.pop()）永远是不完整的（因为它没有以换行符结尾）。
+        // 我们把它从数组里拿出来，重新塞回 buffer 里，等下一个网络包到来时继续拼接！
+        buffer = lines.pop() ?? ''
 
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue
@@ -115,12 +125,10 @@ export function useStreamSSE() {
           if (!event) continue
 
           if (event.type === 'token') {
-            // 流式 token：累积并实时更新 UI
             accumulated += event.content
             onToken?.(event.content)
             setState((prev) => ({ ...prev, text: accumulated }))
           } else if (event.type === 'message') {
-            // 完整消息：交给调用方处理（替换最终内容）
             onMessage?.(event.content)
           } else if (event.type === 'error') {
             throw new Error(event.content)
