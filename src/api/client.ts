@@ -36,7 +36,7 @@ const refreshAccessToken = async (): Promise<string> => {
   const refreshToken = getRefreshToken()
   if (!refreshToken) throw new Error('No refresh token')
 
-  // 💡 核心修改 2：修复原生 axios.post 不携带 baseURL 的暗坑
+  // 核心修改 2：修复原生 axios.post 不携带 baseURL 的暗坑
   const { data } = await axios.post<TokenResponse>(
     '/api/v1/auth/refresh',
     { refresh_token: refreshToken },
