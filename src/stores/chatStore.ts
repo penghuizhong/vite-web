@@ -13,6 +13,7 @@ interface ChatStore {
   updateMessage: (conversationId: string, messageId: string, content: string) => void
   setMessageStreaming: (conversationId: string, messageId: string, isStreaming: boolean) => void
   getActiveConversation: () => Conversation | null
+  clearStore: () => void
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -102,6 +103,8 @@ export const useChatStore = create<ChatStore>()(
         const { conversations, activeConversationId } = get()
         return conversations.find((c) => c.id === activeConversationId) ?? null
       },
+
+      clearStore: () => set({ conversations: [], activeConversationId: null }),
     }),
     {
       name: 'patternmaking-chat-store',

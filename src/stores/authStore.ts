@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { login as apiLogin, register as apiRegister, getMe } from '@/api/auth'
 import { setTokens, removeTokens, isAuthenticated } from '@/lib/auth'
 import type { UserResponse } from '@/api/types'
+import { useChatStore } from './chatStore'
 
 interface AuthStore {
   user: UserResponse | null
@@ -53,6 +54,12 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   logout: () => {
     removeTokens()
     set({ user: null, isAuthenticated: false })
+
+    // 2. 🚨 核心斩草除根：清空聊天记录的内存
+    useChatStore.getState().clearStore()
+
+    // 3. 🚨 核心斩草除根：暴力销毁 localStorage 里的硬盘缓存
+    localStorage.removeItem('patternmaking-chat-store')
   },
 
   fetchUser: async () => {
