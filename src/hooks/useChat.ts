@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useStreamSSE } from '@/hooks/useStreamSSE'
 import { useChatStore } from '@/stores/chatStore'
 import type { ChatRequest } from '@/types/chat'
+import { API_BASE_URL } from '@/lib/env'
 
 export function useChat() {
   const {
@@ -43,7 +44,7 @@ export function useChat() {
 
       try {
         await startStream({
-          url: '/v1/agent/stream',
+          url: `${API_BASE_URL}/v1/agent/stream`,
           method: 'POST',
           body: request,
 

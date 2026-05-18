@@ -1,10 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { getToken, getRefreshToken, setTokens } from '@/lib/auth'
+import { API_BASE_URL } from '@/lib/env'
 
-// 服务端 SSE 事件的两种格式：
-//   { type: 'token',   content: string }            → 流式 token 片段
-//   { type: 'message', content: ChatMessage(dict) } → 完整消息对象
-//   { type: 'error',   content: string }            → 错误文本
 export type SSETokenEvent = { type: 'token'; content: string }
 export type SSEMessageEvent = { type: 'message'; content: Record<string, unknown> }
 export type SSEErrorEvent = { type: 'error'; content: string }
@@ -31,7 +28,7 @@ async function refreshAccessToken(): Promise<string> {
   const refreshToken = getRefreshToken()
   if (!refreshToken) throw new Error('No refresh token')
 
-  const response = await fetch('/api/v1/auth/refresh', {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken }),
