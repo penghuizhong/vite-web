@@ -7,7 +7,7 @@ import type { TokenResponse } from '@/api/types'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 export const client = axios.create({
-  baseURL: API_BASE_URL, // 👈 注入基础路径
+  baseURL: API_BASE_URL, // 👈 注入基础路径随意支配
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
